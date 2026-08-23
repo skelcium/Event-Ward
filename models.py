@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Literal
 
 # activePlayer
 class Ability(BaseModel):
@@ -80,7 +81,57 @@ class ActivePlayer(BaseModel):
     summonerName: str
     teamRelativeColors: bool
 
+class Item(BaseModel):
+    canUse: bool
+    consumable: bool
+    count: int
+    displayName: str
+    itemID: int
+    price: int
+    rawDescription: str
+    rawDisplayName: str
+    slot: int
+
+class Score(BaseModel):
+    assists: int
+    creepScore: int
+    deaths: int
+    kills: int
+    wardScore: float
+
+class SummonerSpell(BaseModel):
+    displayName: str
+    rawDescription: str
+    rawDisplayName: str
+
+class SummonerSpells(BaseModel):
+    summonerSpellOne: SummonerSpell
+    summonerSpellTwo: SummonerSpell
+
+class Player(BaseModel):
+    championName: str
+    isBot: bool
+    isDead: bool
+    items: list[Item]
+    level: int
+    position: str
+    rawChampionName: str
+    rawSkinName: str
+    respawnTimer: float
+    riotId: str
+    riotIdGameName: str
+    riotIdTagLine: str
+    runes: FullRunes
+    scores: Score
+    skinID: int
+    skinName: str
+    summonerName: str
+    summonerSpells: SummonerSpells
+    team: str
+
 # allPlayers
+class AllPlayers(BaseModel):
+    players: list[Player]
 
 """
 # events
@@ -163,7 +214,7 @@ class AceEvent(BaseModel):
     EventID: int
     EventTime: float
     Acer: str
-    AcingTeam: "ORDER | CHAOS"
+    AcingTeam: Literal["Order", "Chaos"]
 
 class TurretKilledEvent(BaseModel):
     EventID: int
@@ -214,7 +265,15 @@ class BaronKillEvent(BaseModel):
 class GameEndEvent(BaseModel):
     EventID: int
     EventTime: float
-    Result: "WIN | LOSS"
+    Result: Literal["Win", "Loss"]
+
+class HordeKill(BaseModel):
+    Assisters: list[str]
+    EventID: int
+    EventName: "HordeKill"
+    EventTime: float
+    KillerName: str
+    Stolen: bool
 
 # Tie event names to their corresponding pydantic class
 event_ties = {
@@ -233,6 +292,7 @@ event_ties = {
     'InhibRespawningSoon': InhibRespawningSoonEvent,
     'InhibRespawned': InhibRespawnedEvent,
     'GameEnd': GameEndEvent,
+    'HordeKill': HordeKill
 }
 
 # gameData

@@ -2,6 +2,7 @@ from typing import get_type_hints
 import requests
 import urllib3
 import models
+from pydantic import ValidationError
 
 class EventWard():
     def __init__(self):
@@ -34,6 +35,10 @@ class EventWard():
         except KeyError:
             # Events not yet available
             return
+        except ValidationError:
+            # Game not fully started
+            return
+
 
         self.amount_of_events = len(events)
 
@@ -74,7 +79,7 @@ class EventWard():
 
     def get_playerlist(self):
         data = requests.get(self.make_url(self.playerlist_endpoint), verify=False).json()
-        pass
+        return models.AllPlayers(players=data)
 
     def make_url(self, endpoint):
         return f"{self.base_url}/{endpoint}"
