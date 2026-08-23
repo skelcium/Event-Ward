@@ -63,7 +63,7 @@ class EventWard():
 
         # Detect new game
         elif self.current_event_index > self.amount_of_events - 1:
-            self.current_event_index = 0
+            self.current_event_index = -1
 
     def get_active_player(self):
         data = requests.get(self.make_url(self.active_player_endpoint), verify=False).json()

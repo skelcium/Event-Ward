@@ -73,7 +73,7 @@ class ActivePlayer(BaseModel):
     abilities: Abilities
     championStats: ChampionStats
     currentGold: float
-    fullRunes: FullRunes
+    fullRunes: FullRunes | None
     level: int
     riotId: str
     riotIdGameName: str
@@ -121,7 +121,7 @@ class Player(BaseModel):
     riotId: str
     riotIdGameName: str
     riotIdTagLine: str
-    runes: FullRunes
+    runes: FullRunes | None
     scores: Score
     skinID: int
     skinName: str
@@ -265,7 +265,7 @@ class BaronKillEvent(BaseModel):
 class GameEndEvent(BaseModel):
     EventID: int
     EventTime: float
-    Result: Literal["Win", "Loss"]
+    Result: Literal["Win", "Lose"]
 
 class HordeKill(BaseModel):
     Assisters: list[str]
