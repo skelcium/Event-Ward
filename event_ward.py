@@ -3,6 +3,7 @@ import requests
 import urllib3
 import models
 from pydantic import ValidationError
+import logging
 
 class EventWard():
     def __init__(self):
@@ -34,9 +35,12 @@ class EventWard():
             events = models.Events.model_validate(data).events
         except KeyError:
             # Events not yet available
+            logging.debug("Events not yet available, retrying...")
+            return
             return
         except ValidationError:
             # Game not fully started
+            logging.info("Game not fully started, retrying...")
             return
 
 
@@ -63,6 +67,7 @@ class EventWard():
 
         # Detect new game
         elif self.current_event_index > self.amount_of_events - 1:
+            logging.info("New game detected!")
             self.current_event_index = -1
 
     def get_active_player(self):

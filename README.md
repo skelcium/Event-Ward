@@ -21,18 +21,18 @@ def game_started(game_start_event: models.GameStartEvent):
     global active_player, my_name
 
     active_player = ward.get_active_player()
-    my_name = active_player.riotIdGameName
+    my_name = active_player.riot_id_game_name
 
     print(f"The game has started! Good luck {my_name}!")
 
 @ward.watch
 def kill(kill_event: models.ChampionKillEvent):
-    if my_name == kill_event.KillerName:
-        print(f"You killed {kill_event.VictimName}!")
+    if my_name == kill_event.killer_name:
+        print(f"You killed {kill_event.victim_name}!")
 
 @ward.watch
 def tower_destroyed(brick_event: models.FirstBrickEvent):
-    minutes, seconds = divmod(int(brick_event.EventTime), 60)
+    minutes, seconds = divmod(int(brick_event.event_time), 60)
     print(f"First tower destroyed at {minutes} minutes and {seconds} seconds.")
 
 @ward.watch
