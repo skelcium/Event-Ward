@@ -52,7 +52,7 @@ class EventWard():
         if self.current_event_index < self.amount_of_events - 1:
             # Iterate through latest events
             for event in events[self.current_event_index + 1:]:
-                corresponding_model = models.event_ties[event.EventName]
+                corresponding_model = models.event_ties[event.event_name]
 
                 # Check if any of the latest events are registered as callbacks
                 for callback in self.callback_funcs:
@@ -60,7 +60,7 @@ class EventWard():
 
                     for key, value in hints.items():
                         if value == corresponding_model:
-                            callback(corresponding_model(**event.model_dump()))
+                            callback(corresponding_model(**event.model_dump(by_alias=True)))
 
 
             self.current_event_index = self.amount_of_events - 1

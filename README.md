@@ -42,7 +42,7 @@ def game_ended(game_end_event: models.GameEndEvent):
     print("Match KDA Summary: ")
 
     for player in player_list.players:
-        print(f"{player.championName} - {player.scores.kills} / {player.scores.deaths} / {player.scores.assists}")
+        print(f"{player.champion_name} - {player.scores.kills} / {player.scores.deaths} / {player.scores.assists}")
 
 while True:
     ward.process_latest_events()
