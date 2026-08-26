@@ -4,9 +4,13 @@ import urllib3
 import models
 from pydantic import ValidationError
 import logging
+import time
 
-class EventWard():
-    def __init__(self):
+class EventWard:
+    def __init__(self, suppress_cached_events: bool = True, poll_interval: float = 0.1):
+        self.suppress_cached_events = suppress_cached_events
+        self.poll_interval = poll_interval
+        self.first_run = True
         #self.api_url = 'https://127.0.0.1:2999/liveclientdata/allgamedata'
         # Endpoints
         self.base_url = 'https://127.0.0.1:2999/liveclientdata'
@@ -37,14 +41,17 @@ class EventWard():
             # Events not yet available
             logging.debug("Events not yet available, retrying...")
             return
-            return
         except ValidationError:
             # Game not fully started
-            logging.info("Game not fully started, retrying...")
+            logging.debug("Game not fully started, retrying...")
             return
 
 
         self.amount_of_events = len(events)
+
+        if self.suppress_cached_events and self.first_run:
+            self.first_run = False
+            self.current_event_index = self.amount_of_events - 1
 
         if self.amount_of_events == 0:
             return
@@ -61,7 +68,6 @@ class EventWard():
                     for key, value in hints.items():
                         if value == corresponding_model:
                             callback(corresponding_model(**event.model_dump(by_alias=True)))
-
 
             self.current_event_index = self.amount_of_events - 1
 
@@ -88,3 +94,8 @@ class EventWard():
 
     def make_url(self, endpoint):
         return f"{self.base_url}/{endpoint}"
+
+    def start(self):
+        while True:
+            self.process_latest_events()
+            time.sleep(self.poll_interval)

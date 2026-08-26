@@ -44,6 +44,5 @@ def game_ended(game_end_event: models.GameEndEvent):
     for player in player_list.players:
         print(f"{player.champion_name} - {player.scores.kills} / {player.scores.deaths} / {player.scores.assists}")
 
-while True:
-    ward.process_latest_events()
+ward.start()
 ```
