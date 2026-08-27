@@ -31,13 +31,13 @@ def kill(kill_event: models.ChampionKillEvent):
         print(f"You killed {kill_event.victim_name}!")
 
 @ward.watch
-def tower_destroyed(brick_event: models.FirstBrickEvent):
+def first_tower_destroyed(brick_event: models.FirstBrickEvent):
     minutes, seconds = divmod(int(brick_event.event_time), 60)
     print(f"First tower destroyed at {minutes} minutes and {seconds} seconds.")
 
 @ward.watch
 def game_ended(game_end_event: models.GameEndEvent):
-    player_list = ward.get_playerlist()
+    player_list = ward.get_player_list()
 
     print("Match KDA Summary: ")
 

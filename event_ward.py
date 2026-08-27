@@ -11,27 +11,39 @@ class EventWard:
         self.suppress_cached_events = suppress_cached_events
         self.poll_interval = poll_interval
         self.first_run = True
+        self.should_shutdown = False
         #self.api_url = 'https://127.0.0.1:2999/liveclientdata/allgamedata'
+
         # Endpoints
         self.base_url = 'https://127.0.0.1:2999/liveclientdata'
         self.active_player_endpoint = 'activeplayer'
-        self.eventdata_endpoint = 'eventdata'
+        self.event_data_endpoint = 'eventdata'
         self.active_player_abilities_endpoint = 'activeplayerabilities'
         self.active_player_runes_endpoint = 'activeplayerrunes'
-        self.playerlist_endpoint = 'playerlist'
+        self.player_list_endpoint = 'playerlist'
+
+        #Query Endpoints
+        self.player_scores_query_endpoint = "playerscores?riotId={}"
+        self.player_summoner_spells_query_endpoint = "playersummonerspells?riotId={}"
+        self.player_main_runes_query_endpoint = "playermainrunes?riotId={}"
+        self.player_items_query_endpoint = "playeritems?riotId={}"
 
         self.amount_of_events = 0
         self.current_event_index = -1
         self.callback_funcs = []
 
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        
+        self.session = requests.Session()
+        self.session.verify = False
 
     def watch(self, func):
         self.callback_funcs.append(func)
 
     def process_latest_events(self):
         try:
-            data = requests.get(self.make_url(self.eventdata_endpoint), verify=False).json()
+            data = self.session.get(self.make_url(self.event_data_endpoint)).json()
+            logging.debug(f"Processing events {data}")
         except:
             return
 
@@ -77,25 +89,48 @@ class EventWard:
             self.current_event_index = -1
 
     def get_active_player(self):
-        data = requests.get(self.make_url(self.active_player_endpoint), verify=False).json()
+        data = self.session.get(self.make_url(self.active_player_endpoint)).json()
         return models.ActivePlayer.model_validate(data)
 
     def get_active_player_abilities(self):
-        data = requests.get(self.make_url(self.active_player_abilities_endpoint), verify=False).json()
+        data = self.session.get(self.make_url(self.active_player_abilities_endpoint)).json()
         return models.Abilities.model_validate(data)
 
     def get_active_player_runes(self):
-        data = requests.get(self.make_url(self.active_player_runes_endpoint), verify=False).json()
+        data = self.session.get(self.make_url(self.active_player_runes_endpoint)).json()
         return models.FullRunes.model_validate(data)
 
-    def get_playerlist(self):
-        data = requests.get(self.make_url(self.playerlist_endpoint), verify=False).json()
+    def get_player_list(self):
+        data = self.session.get(self.make_url(self.player_list_endpoint)).json()
         return models.AllPlayers(players=data)
 
-    def make_url(self, endpoint):
-        return f"{self.base_url}/{endpoint}"
+    def get_player_scores(self, riot_id: str):
+        data = self.session.get(self.make_url(self.player_scores_query_endpoint, riot_id)).json()
+        return models.Score.model_validate(data)
+
+    def get_player_summoner_spells(self, riot_id: str):
+        data = self.session.get(self.make_url(self.player_summoner_spells_query_endpoint, riot_id)).json()
+        return models.SummonerSpells.model_validate(data)
+
+    def get_player_main_runes(self, riot_id: str):
+        data = self.session.get(self.make_url(self.player_main_runes_query_endpoint, riot_id)).json()
+        return models.FullRunes.model_validate(data)
+
+    def get_player_items(self, riot_id: str):
+        data = self.session.get(self.make_url(self.player_items_query_endpoint, riot_id)).json()
+        return models.Item.model_validate(data)
+
+    def make_url(self, endpoint, args=None):
+        if args is None:
+            return f"{self.base_url}/{endpoint}"
+        else:
+            return f"{self.base_url}/{endpoint.format(args)}"
 
     def start(self):
-        while True:
+        while not self.should_shutdown:
             self.process_latest_events()
             time.sleep(self.poll_interval)
+
+    def shutdown(self):
+        self.should_shutdown = True
+        self.session.close()
