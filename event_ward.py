@@ -120,7 +120,7 @@ class EventWard:
         data = self.session.get(self.make_url(self.player_items_query_endpoint, riot_id)).json()
         return models.Item.model_validate(data)
 
-    def make_url(self, endpoint, args=None):
+    def make_url(self, endpoint: str, args: str | None = None):
         if args is None:
             return f"{self.base_url}/{endpoint}"
         else:
