@@ -12,10 +12,10 @@ class EventWard:
         self.poll_interval = poll_interval
         self.first_run = True
         self.should_shutdown = False
-        #self.api_url = 'https://127.0.0.1:2999/liveclientdata/allgamedata'
 
         # Endpoints
         self.base_url = 'https://127.0.0.1:2999/liveclientdata'
+        self.all_game_data_endpoint = 'allgamedata'
         self.active_player_endpoint = 'activeplayer'
         self.event_data_endpoint = 'eventdata'
         self.active_player_abilities_endpoint = 'activeplayerabilities'
@@ -119,6 +119,11 @@ class EventWard:
     def get_player_items(self, riot_id: str):
         data = self.session.get(self.make_url(self.player_items_query_endpoint, riot_id)).json()
         return models.Item.model_validate(data)
+
+    def get_all_game_data(self):
+        data = self.session.get(self.make_url(self.all_game_data_endpoint)).json()
+        return models.AllGameData.model_validate(data)
+
 
     def make_url(self, endpoint: str, args: str | None = None):
         if args is None:

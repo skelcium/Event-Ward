@@ -281,6 +281,12 @@ class GameStats(BaseModel):
     map_number: int = Field(alias='mapNumber')
     map_terrain: str = Field(alias='mapTerrain')
 
+class AllGameData(BaseModel):
+    active_player: ActivePlayer = Field(alias='activePlayer')
+    all_players: list[Player] = Field(alias='allPlayers')
+    event_root: Events = Field(alias='events')
+    game_data: GameStats = Field(alias='gameData')
+
 # Tie event names to their corresponding pydantic class
 event_ties = {
     'GameStart': GameStartEvent,
