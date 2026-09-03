@@ -10,7 +10,7 @@ models.py contains several events classes that can be listened to, such as in th
 import event_ward
 import models
 
-ward = event_ward.EventWard(suppress_cached_events=False)
+ward = event_ward.EventWard()
 
 active_player: models.ActivePlayer
 my_name: str
