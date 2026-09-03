@@ -1,10 +1,9 @@
 from typing import get_type_hints
-import requests
-import urllib3
 import models
 from pydantic import ValidationError
 import logging
-import time
+import httpx
+import asyncio
 
 class EventWard:
     def __init__(self, suppress_cached_events: bool = True, poll_interval: float = 0.1):
@@ -31,18 +30,15 @@ class EventWard:
         self.amount_of_events = 0
         self.current_event_index = -1
         self.callback_funcs = []
-
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         
-        self.session = requests.Session()
-        self.session.verify = False
+        self.session = httpx.AsyncClient(verify=False)
 
     def watch(self, func):
         self.callback_funcs.append(func)
 
-    def process_latest_events(self):
+    async def process_latest_events(self):
         try:
-            data = self.session.get(self.make_url(self.event_data_endpoint)).json()
+            data = (await self.session.get(self.make_url(self.event_data_endpoint))).json()
             logging.debug(f"Processing events {data}")
         except:
             return
@@ -73,13 +69,13 @@ class EventWard:
             for event in events[self.current_event_index + 1:]:
                 corresponding_model = models.event_ties[event.event_name]
 
-                # Check if any of the latest events are registered as callbacks
+                # Check if any of the latest events are registered as ca llbacks
                 for callback in self.callback_funcs:
                     hints = get_type_hints(callback)
 
                     for key, value in hints.items():
                         if value == corresponding_model:
-                            callback(corresponding_model(**event.model_dump(by_alias=True)))
+                            await callback(corresponding_model(**event.model_dump(by_alias=True)))
 
             self.current_event_index = self.amount_of_events - 1
 
@@ -88,40 +84,40 @@ class EventWard:
             logging.info("New game detected!")
             self.current_event_index = -1
 
-    def get_active_player(self):
-        data = self.session.get(self.make_url(self.active_player_endpoint)).json()
+    async def get_active_player(self):
+        data = (await self.session.get(self.make_url(self.active_player_endpoint))).json()
         return models.ActivePlayer.model_validate(data)
 
-    def get_active_player_abilities(self):
-        data = self.session.get(self.make_url(self.active_player_abilities_endpoint)).json()
+    async def get_active_player_abilities(self):
+        data = (await self.session.get(self.make_url(self.active_player_abilities_endpoint))).json()
         return models.Abilities.model_validate(data)
 
-    def get_active_player_runes(self):
-        data = self.session.get(self.make_url(self.active_player_runes_endpoint)).json()
+    async def get_active_player_runes(self):
+        data = (await self.session.get(self.make_url(self.active_player_runes_endpoint))).json()
         return models.FullRunes.model_validate(data)
 
-    def get_player_list(self):
-        data = self.session.get(self.make_url(self.player_list_endpoint)).json()
-        return models.AllPlayers(players=data)
+    async def get_player_list(self):
+        data = (await self.session.get(self.make_url(self.player_list_endpoint))).json()
+        return models.AllPlayers.model_validate(data).root
 
-    def get_player_scores(self, riot_id: str):
-        data = self.session.get(self.make_url(self.player_scores_query_endpoint, riot_id)).json()
+    async def get_player_scores(self, riot_id: str):
+        data = (await self.session.get(self.make_url(self.player_scores_query_endpoint, riot_id))).json()
         return models.Score.model_validate(data)
 
-    def get_player_summoner_spells(self, riot_id: str):
-        data = self.session.get(self.make_url(self.player_summoner_spells_query_endpoint, riot_id)).json()
+    async def get_player_summoner_spells(self, riot_id: str):
+        data = (await self.session.get(self.make_url(self.player_summoner_spells_query_endpoint, riot_id))).json()
         return models.SummonerSpells.model_validate(data)
 
-    def get_player_main_runes(self, riot_id: str):
-        data = self.session.get(self.make_url(self.player_main_runes_query_endpoint, riot_id)).json()
+    async def get_player_main_runes(self, riot_id: str):
+        data = (await self.session.get(self.make_url(self.player_main_runes_query_endpoint, riot_id))).json()
         return models.FullRunes.model_validate(data)
 
-    def get_player_items(self, riot_id: str):
-        data = self.session.get(self.make_url(self.player_items_query_endpoint, riot_id)).json()
-        return models.Item.model_validate(data)
+    async def get_player_items(self, riot_id: str):
+        data = (await self.session.get(self.make_url(self.player_items_query_endpoint, riot_id))).json()
+        return models.PlayerItems.model_validate(data).root
 
-    def get_all_game_data(self):
-        data = self.session.get(self.make_url(self.all_game_data_endpoint)).json()
+    async def get_all_game_data(self):
+        data = (await self.session.get(self.make_url(self.all_game_data_endpoint))).json()
         return models.AllGameData.model_validate(data)
 
 
@@ -131,11 +127,14 @@ class EventWard:
         else:
             return f"{self.base_url}/{endpoint.format(args)}"
 
-    def start(self):
+    async def async_start(self):
         while not self.should_shutdown:
-            self.process_latest_events()
-            time.sleep(self.poll_interval)
+            await self.process_latest_events()
+            await asyncio.sleep(self.poll_interval)
 
-    def shutdown(self):
+    def start(self):
+        asyncio.run(self.async_start())
+
+    async def shutdown(self):
         self.should_shutdown = True
-        self.session.close()
+        await self.session.aclose()

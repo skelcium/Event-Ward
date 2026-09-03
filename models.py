@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from typing import Literal
 
 # activePlayer
@@ -130,8 +130,8 @@ class Player(BaseModel):
     team: str
 
 # allPlayers
-class AllPlayers(BaseModel):
-    players: list[Player]
+class AllPlayers(RootModel[list[Player]]):
+    pass
 
 """
 # events
@@ -273,6 +273,9 @@ class HordeKill(BaseModel):
     event_time: float = Field(alias='EventTime')
     killer_name: str = Field(alias='KillerName')
     stolen: bool = Field(alias='Stolen')
+
+class PlayerItems(RootModel[list[Item]]):
+    pass
 
 class GameStats(BaseModel):
     game_mode: str = Field(alias='gameMode')
