@@ -9,6 +9,7 @@ models.py contains several events classes that can be listened to, such as in th
 ```python
 import event_ward
 import models
+import events
 
 ward = event_ward.EventWard()
 
@@ -16,7 +17,7 @@ active_player: models.ActivePlayer
 my_name: str
 
 @ward.watch
-async def game_started(game_start_event: models.GameStartEvent):
+async def game_started(game_start_event: events.GameStartEvent):
     global active_player, my_name
 
     active_player = await ward.get_active_player()
@@ -25,17 +26,17 @@ async def game_started(game_start_event: models.GameStartEvent):
     print(f"The game has started! Good luck {my_name}!")
 
 @ward.watch
-async def kill(kill_event: models.ChampionKillEvent):
+async def kill(kill_event: events.ChampionKillEvent):
     if my_name == kill_event.killer_name:
         print(f"You killed {kill_event.victim_name}!")
 
 @ward.watch
-async def first_tower_destroyed(brick_event: models.FirstBrickEvent):
+async def first_tower_destroyed(brick_event: events.FirstBrickEvent):
     minutes, seconds = divmod(int(brick_event.event_time), 60)
     print(f"First tower destroyed at {minutes} minutes and {seconds} seconds.")
 
 @ward.watch
-async def game_ended(game_end_event: models.GameEndEvent):
+async def game_ended(game_end_event: events.GameEndEvent):
     player_list = await ward.get_player_list()
 
     print("Match KDA Summary: ")
