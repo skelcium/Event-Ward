@@ -4,6 +4,7 @@ from pydantic import ValidationError
 import logging
 import httpx
 import asyncio
+import events as event_models
 
 class EventWard:
     def __init__(self, suppress_cached_events: bool = True, poll_interval: float = 0.1):
@@ -67,9 +68,9 @@ class EventWard:
         if self.current_event_index < self.amount_of_events - 1:
             # Iterate through latest events
             for event in events[self.current_event_index + 1:]:
-                corresponding_model = models.event_ties[event.event_name]
+                corresponding_model = event_models.event_ties[event.event_name]
 
-                # Check if any of the latest events are registered as ca llbacks
+                # Check if any of the latest events are registered as callbacks
                 for callback in self.callback_funcs:
                     hints = get_type_hints(callback)
 
